@@ -1,0 +1,27 @@
+name: LapisTargetDummy
+version: '${version}'
+main: mc506lw.lapisTargetDummy.LapisTargetDummy
+api-version: '1.21'
+load: POSTWORLD
+description: 在下界合金块上放置盔甲架即可创建训练假人，显示带护甲减免的伤害数字。
+author: mc506lw
+
+commands:
+  ltd:
+    description: 训练假人管理指令
+    usage: /ltd [info|reload]
+    aliases: [targetdummy, dummy]
+
+permissions:
+  lapistargetdummy.create:
+    description: 允许创建训练假人
+    default: true
+  lapistargetdummy.equip:
+    description: 允许打开假人装备界面
+    default: true
+  lapistargetdummy.destroy:
+    description: 允许空手潜行攻击拆除假人
+    default: true
+  lapistargetdummy.admin:
+    description: 允许重载配置
+    default: op

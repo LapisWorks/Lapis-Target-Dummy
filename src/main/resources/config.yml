@@ -1,0 +1,46 @@
+# 训练假人 (Lapis Target Dummy)
+#
+# 在此方块上放置盔甲架即可创建训练假人。必须是一个方块。
+base-block: NETHERITE_BLOCK
+
+damage-numbers:
+  # 数字存活的刻数。越短越不容易相互遮挡；上升与淡出动画在存活期内完成。
+  lifetime-ticks: 16
+  # 上升高度（方块）。
+  rise-height: 0.9
+  # 生成高度（相对假人脚部）。盔甲架头部约在 1.8~1.9，默认略低于头顶。
+  spawn-height: 1.7
+  # 避让圈半径（方块）。新数字沿向日葵螺旋寻找不与现存数字重叠的位置；
+  # 设为 0 可关闭避让（全部从同一点生成）。
+  spread-radius: 0.28
+  # 可见距离系数。1.0 约等于 64 格，调小可显著降低数据包量。
+  view-range: 0.5
+  # 数字缩放。默认 1.6 明显大于普通聊天字号；嫌小可以继续调大。
+  scale: 1.6
+  # 每个假人每秒最多生成的数字实体数量。
+  max-per-dummy-per-second: 12
+  # 是否在括号内额外显示减免前的伤害。
+  show-original: true
+  # 是否显示类别符号（☠ 亡灵 / ≋ 海洋 / ⚔ 灾厄 / ⚘ 节肢）。
+  show-category-mark: true
+  # 数字尾部是否淡出（文字透明度降低，底板保持可见）。
+  fade-out: true
+  # 数字格式，必须是一个能接受浮点数的格式串；非法值会退回 '%.1f'。
+  format: '%.1f'
+
+behaviour:
+  # 受击无敌帧（刻），模拟原版 0.5 秒受击冷却。窗口内的攻击：
+  #   - 伤害 ≤ 上一次：直接忽略（无数字、无音效）
+  #   - 伤害 > 上一次：只显示超出的差值
+  # 与原版生物的无敌帧行为一致。设为 0 可关闭（每次攻击都显示）。
+  hurt-immunity-ticks: 10
+  # 保持假人参与 tick。仅在创建假人时应用，改动后需要重新放置假人才生效。
+  tick-dummies: true
+  # 是否为火焰、爆炸、仙人掌等非实体伤害也显示数字。
+  # 默认关闭：站在火里的假人会不停刷数字。假人本身始终不会被这些伤害破坏。
+  show-environmental-damage: false
+  play-hit-sound: true
+  # 是否要求潜行才能打开装备界面。默认关闭：直接右键即可打开。
+  require-sneak-to-open-menu: false
+  # 关服时是否立即移除屏幕上的伤害数字。数字本身不会存盘，关闭也不会残留。
+  cleanup-on-disable: true
