@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.inventory.EquipmentSlot;
 
 /**
@@ -31,8 +30,8 @@ public final class InteractListener implements Listener {
     private final Registries registries;
     private DummyConfig config;
 
-    /** Last tick each player was served, to collapse duplicate interact events. */
-    private final java.util.Map<java.util.UUID, Integer> lastHandledTick = new java.util.HashMap<>();
+    /** Last serve time per player, to collapse duplicate interact events. */
+    private final java.util.Map<java.util.UUID, Long> lastHandledTick = new java.util.concurrent.ConcurrentHashMap<>();
 
     public InteractListener(DummyService dummies, Registries registries, DummyConfig config) {
         this.dummies = dummies;
@@ -94,11 +93,13 @@ public final class InteractListener implements Listener {
 
     /**
      * @return {@code true} for the first interact event a player produces in a
-     *         tick, {@code false} for the duplicate that may follow
+     *         tick, {@code false} for the duplicate that may follow. Uses
+     *         wall-clock time: Folia has no global tick counter, and a 50 ms
+     *         dedup window is equivalent for this purpose.
      */
     private boolean claimTick(Player player) {
-        int now = Bukkit.getCurrentTick();
-        Integer previous = lastHandledTick.put(player.getUniqueId(), now);
-        return previous == null || previous != now;
+        long now = System.nanoTime();
+        Long previous = lastHandledTick.put(player.getUniqueId(), now);
+        return previous == null || now - previous > 50_000_000L;
     }
 }

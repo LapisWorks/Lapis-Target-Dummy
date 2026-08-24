@@ -1,8 +1,8 @@
 # Lapis Target Dummy
 
-一款 Paper 训练假人插件：在下界合金块上放置盔甲架，即可把它变成一个**打不坏、不掉耐久、无限刷**的木桩。每次攻击都会在假人头顶弹出伤害数字——数值是**经过护甲、韧性、保护附魔完整减免后**的真实结果，方便你精确对比装备与武器强度。
+一款 Paper / Folia 训练假人插件：在下界合金块上放置盔甲架，即可把它变成一个**打不坏、不掉耐久、无限刷**的木桩。每次攻击都会在假人头顶弹出伤害数字——数值是**经过护甲、韧性、保护附魔完整减免后**的真实结果，方便你精确对比装备与武器强度。
 
-![版本](https://img.shields.io/badge/Paper-1.21.x-blue) ![Java](https://img.shields.io/badge/Java-21-orange) ![构建](https://img.shields.io/badge/ProtocolLib-不需要-green)
+![版本](https://img.shields.io/badge/Paper%20|%20Folia-1.21.x-blue) ![Java](https://img.shields.io/badge/Java-21-orange) ![构建](https://img.shields.io/badge/ProtocolLib-不需要-green)
 
 ## 特性
 
@@ -58,8 +58,8 @@
 
 ## 安装
 
-1. 服务器要求 **Paper 1.21.1 或更高**（及任何兼容分支：Purpur、Folia 未测试）。
-2. 把 `Lapis-TargetDummy-1.0.jar` 放进 `plugins/` 目录，重启服务器。
+1. 服务器要求 **Paper 1.21.1 或更高**；兼容分支 Purpur、Folia 均可（Folia 支持自 v1.1 起，所有任务走实体区域调度器）。
+2. 把 `Lapis-TargetDummy-<版本>.jar` 放进 `plugins/` 目录，重启服务器。
 3. 首次启动会生成 `plugins/LapisTargetDummy/config.yml`，全部选项都有中文注释。
 
 不需要 ProtocolLib，不需要依赖任何前置插件。
@@ -113,7 +113,8 @@ behaviour:
 
 - **状态全部存在实体 PDC 里**：没有数据文件、没有启动扫描，启用/重载都是 O(1)；假人随区块存档，重启即恢复。
 - **伤害永远被取消**：假人不掉血、不受击退、不掉装备，武器也不掉耐久；唯一的例外是 `/kill` 与掉出虚空，保证管理员工具照常可用。
-- **性能**：唯一会运行的任务是"有数字在屏上"期间的清扫器（2 刻一次，队列空则自取消）；头颅皮肤查询等网络操作全部异步。
+- **Folia 兼容**：没有全局主线程可依赖——所有延迟任务（数字动画与到期回收、DPS 总结、放置确认、拆除延迟、菜单刷新）都通过**实体自身的调度器**执行，自动落在拥有该实体的区域线程上；共享状态使用并发集合，计时用 `nanoTime` 而非全局 tick 计数。在 Paper 上实体调度器退化为普通主线程任务，行为不变。
+- **性能**：没有常驻任务。每个伤害数字只安排 3~5 次一次性延迟写（动画 + 到期自删），无人训练时插件完全静默。
 
 ## 局限性
 

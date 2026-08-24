@@ -21,9 +21,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Turns hits on a dummy into a damage read-out.
@@ -48,8 +48,11 @@ public final class DamageListener implements Listener {
      * is why spam-clicking would otherwise produce a number per click. Here a hit
      * inside the window is ignored unless it deals more than the last recorded
      * one; then only the difference is shown, exactly like vanilla.
+     * <p>
+     * Concurrent because hits can arrive from different region threads at once
+     * under Folia; each dummy's entry is only ever written from its own region.
      */
-    private final Map<UUID, HurtState> hurtStates = new HashMap<>();
+    private final Map<UUID, HurtState> hurtStates = new ConcurrentHashMap<>();
 
     public DamageListener(DummyService dummies,
                           DamageEmulator emulator,
@@ -135,11 +138,15 @@ public final class DamageListener implements Listener {
         // shows only the part above the recorded hit — exactly how invulnerability
         // ticks behave for a real mob. The stored baseline is always the FULL
         // damage of the newest accepted hit, never the shown difference.
-        int now = org.bukkit.Bukkit.getCurrentTick();
+        //
+        // The window is wall-clock (nanoseconds), not server ticks: Folia has no
+        // global tick counter, and a per-dummy timer is correct on both platforms.
+        long now = System.nanoTime();
+        long windowNanos = config.hurtImmunityTicks * 50_000_000L;
         HurtState state = hurtStates.get(stand.getUniqueId());
-        boolean immune = config.hurtImmunityTicks > 0
+        boolean immune = windowNanos > 0
                 && state != null
-                && now - state.lastHurtTick() < config.hurtImmunityTicks;
+                && now - state.lastHurtTick() < windowNanos;
         if (immune) {
             double excess = result.finalized() - state.lastDamage();
             if (excess <= 0.01D) {
@@ -183,6 +190,6 @@ public final class DamageListener implements Listener {
     }
 
     /** Last hit recorded for a dummy, for the invulnerability window. */
-    private record HurtState(int lastHurtTick, double lastDamage, double lastRaw) {
+    private record HurtState(long lastHurtTick, double lastDamage, double lastRaw) {
     }
 }

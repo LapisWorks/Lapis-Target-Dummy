@@ -52,6 +52,9 @@ public final class DummyEquipmentMenu implements InventoryHolder {
     /** Index of the informational panel. */
     private static final int INFO_SLOT = 4;
 
+    /** Owning plugin, for scheduling repaints on the viewer's region thread. */
+    private static volatile org.bukkit.plugin.Plugin schedulerPlugin;
+
     private final UUID dummyId;
     private final Inventory inventory;
     private final Registries registries;
@@ -68,6 +71,11 @@ public final class DummyEquipmentMenu implements InventoryHolder {
         player.openInventory(new DummyEquipmentMenu(dummy, registries).getInventory());
     }
 
+    /** Called once from {@code onEnable}; menus need a plugin to schedule with. */
+    public static void init(org.bukkit.plugin.Plugin plugin) {
+        schedulerPlugin = plugin;
+    }
+
     @Override
     public Inventory getInventory() {
         return inventory;
@@ -82,13 +90,24 @@ public final class DummyEquipmentMenu implements InventoryHolder {
      * The scan is over online players, which is O(players) per click and only
      * while menus are actually in use; a persistent viewer registry would need
      * close-event bookkeeping to stay correct, which costs more than it saves.
+     * <p>
+     * On Folia each repaint is pushed through the viewer's own scheduler, because
+     * a player's inventory belongs to the region thread that owns them — which is
+     * not necessarily the thread that owns this dummy. On Paper the entity
+     * scheduler simply runs on the main thread, so behaviour is unchanged.
      */
     public static void refreshAll(ArmorStand dummy) {
+        org.bukkit.plugin.Plugin plugin = schedulerPlugin;
         UUID id = dummy.getUniqueId();
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online.getOpenInventory().getTopInventory().getHolder()
                     instanceof DummyEquipmentMenu menu && menu.dummyId.equals(id)) {
-                menu.refresh(dummy);
+                if (plugin != null) {
+                    mc506lw.lapisTargetDummy.util.FoliaScheduler.runAtEntity(
+                            plugin, online, 0L, () -> menu.refresh(dummy));
+                } else {
+                    menu.refresh(dummy);
+                }
             }
         }
     }

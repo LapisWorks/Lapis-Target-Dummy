@@ -4,7 +4,6 @@ import mc506lw.lapisTargetDummy.dummy.DummyKeys;
 import mc506lw.lapisTargetDummy.dummy.DummyService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -72,8 +71,9 @@ public final class ProtectionListener implements Listener {
         }
         event.setCancelled(true);
         // Deferred by a tick: removing the entity here would leave every later
-        // listener in this event holding a reference to a dead armor stand.
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        // listener in this event holding a reference to a dead armor stand. The
+        // task rides the stand's own scheduler (region-correct under Folia).
+        mc506lw.lapisTargetDummy.util.FoliaScheduler.runAtEntity(plugin, stand, 1L, () -> {
             if (stand.isValid() && dummies.isDummy(stand)) {
                 dummies.dismantle(stand);
             }

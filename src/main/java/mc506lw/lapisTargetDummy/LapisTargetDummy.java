@@ -59,7 +59,11 @@ public final class LapisTargetDummy extends JavaPlugin {
             getLogger().warning("未能解析护甲属性，减伤计算将退化为不减伤。"
                     + "请确认服务端版本为 1.21 或更高。");
         }
+        if (mc506lw.lapisTargetDummy.util.FoliaScheduler.isFolia()) {
+            getLogger().info("检测到 Folia：所有延迟任务走实体区域调度器。");
+        }
 
+        DummyEquipmentMenu.init(this);
         this.dummies = new DummyService(keys, registries, config);
         this.renderer = new DamageNumberRenderer(this, keys, config);
         this.strengthTracker = new AttackStrengthTracker();
@@ -119,11 +123,15 @@ public final class LapisTargetDummy extends JavaPlugin {
      * Closes every equipment menu currently open. Called on disable and on
      * reload, because an orphaned menu view is indistinguishable from a chest
      * full of free copies of the dummy's equipment.
+     * <p>
+     * Each close rides the viewer's own scheduler: a player's inventory belongs
+     * to their region thread under Folia, and onDisable runs on none of them.
      */
-    private static void closeOpenMenus() {
+    private void closeOpenMenus() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getOpenInventory().getTopInventory().getHolder() instanceof DummyEquipmentMenu) {
-                player.closeInventory();
+                mc506lw.lapisTargetDummy.util.FoliaScheduler.runAtEntity(this, player, 0L,
+                        player::closeInventory);
             }
         }
     }

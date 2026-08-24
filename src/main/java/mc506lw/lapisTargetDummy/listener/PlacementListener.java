@@ -39,8 +39,10 @@ public final class PlacementListener implements Listener {
             return;
         }
         // Deferred by one tick so the vanilla placement finishes writing the
-        // stand's own state before it is reconfigured.
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        // stand's own state before it is reconfigured. The task rides the
+        // stand's own scheduler, which is region-correct on Folia and simply
+        // the main thread on Paper.
+        mc506lw.lapisTargetDummy.util.FoliaScheduler.runAtEntity(plugin, stand, 1L, () -> {
             if (!stand.isValid() || dummies.isDummy(stand)) {
                 return;
             }

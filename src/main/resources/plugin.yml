@@ -3,6 +3,7 @@ version: '${version}'
 main: mc506lw.lapisTargetDummy.LapisTargetDummy
 api-version: '1.21'
 load: POSTWORLD
+folia-supported: true
 description: 在下界合金块上放置盔甲架即可创建训练假人，显示带护甲减免的伤害数字。
 author: mc506lw
 
